@@ -1,0 +1,23 @@
+---
+title: "WDPA-GBIF"
+author: "Anders G. Finstad"
+date: "February 3, 2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(rio)
+```
+
+## Data download
+
+
+```{r pressure, echo=FALSE}
+tmp_file <- tempfile()
+download_url <- "http://download.gbif.org/custom_download/jwaller/protected_areas_export.zip"
+download.file(download_url,destfile=tmp_file)
+
+```
+
