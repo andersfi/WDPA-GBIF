@@ -41,3 +41,4 @@ vignettes/*.pdf
 
 # datafiles
 *.zip
+*/raw_data

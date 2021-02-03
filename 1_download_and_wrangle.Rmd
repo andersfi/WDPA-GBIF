@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+#knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(rio)
 ```
@@ -14,19 +14,24 @@ library(rio)
 ## Data download
 
 
-```{r pressure, echo=FALSE}
+```{r download, echo=FALSE}
 tmp_file <- tempfile()
 tmp_dir <- tempdir()
+dir.create("..//raw_data")
 download_url <- "http://download.gbif.org/custom_download/jwaller/protected_areas_export.zip"
 download.file(download_url,destfile=tmp_file)
 unzip(tmp_file,files="occurrence.txt",list=TRUE)
+
+
 
 unzip(tmp_file,files=c("protected_areas_export_WDPA_WDOECM_shp0_table",
                        "protected_areas_export_WDPA_WDOECM_shp1_table",
                        "protected_areas_export_WDPA_WDOECM_shp2_table"),
                        exdir = tmp_dir,overwrite = TRUE) 
-
-file.rename() "protected_areas_export_WDPA_WDOECM_shp0_table" 
+workingdir <- getwd()
+workdir_tmp <- setwd(tmp_dir)
+file.rename("protected_areas_export_WDPA_WDOECM_shp0_table",
+            "protected_areas_export_WDPA_WDOECM_shp0_table.tsv")
 
 list.files(tmp_dir)
 
