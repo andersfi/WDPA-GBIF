@@ -16,8 +16,22 @@ library(rio)
 
 ```{r pressure, echo=FALSE}
 tmp_file <- tempfile()
+tmp_dir <- tempdir()
 download_url <- "http://download.gbif.org/custom_download/jwaller/protected_areas_export.zip"
 download.file(download_url,destfile=tmp_file)
+unzip(tmp_file,files="occurrence.txt",list=TRUE)
+
+unzip(tmp_file,files=c("protected_areas_export_WDPA_WDOECM_shp0_table",
+                       "protected_areas_export_WDPA_WDOECM_shp1_table",
+                       "protected_areas_export_WDPA_WDOECM_shp2_table"),
+                       exdir = tmp_dir,overwrite = TRUE) 
+
+file.rename() "protected_areas_export_WDPA_WDOECM_shp0_table" 
+
+list.files(tmp_dir)
+
+#occurrences <- rio::import(unzip(tmp_file,files="protected_areas_export_WDPA_WDOECM_shp0_t#able",exdir = tmp_dir,destfile="wdpa_0.tsv")) # on the fly unzip and import to R object 
+
 
 ```
 
