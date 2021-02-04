@@ -9,46 +9,88 @@ output: html_document
 #knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(rio)
+library(sf)
 ```
 
 ## Data download and import
 
 
 ```{r download, echo=FALSE}
-tmp_file <- tempfile()
-tmp_dir <- tempdir()
-dir.create("..//raw_data")
-download_url <- "http://download.gbif.org/custom_download/jwaller/protected_areas_export.zip"
-download.file(download_url,destfile="../raw_data/protected_areas_export.zip")
 
-unzip("../raw_data/protected_areas_export.zip",
-      files=c("protected_areas_export_WDPA_WDOECM_shp0_table",
-                       "protected_areas_export_WDPA_WDOECM_shp1_table",
-                       "protected_areas_export_WDPA_WDOECM_shp2_table"),
-                       exdir = "..//raw_data",overwrite = TRUE) 
-file.rename(from="../raw_data/protected_areas_export_WDPA_WDOECM_shp0_table",
-           to= "../raw_data/protected_areas_export_WDPA_WDOECM_shp0_table.tsv")
-file.rename(from="../raw_data/protected_areas_export_WDPA_WDOECM_shp1_table",
-           to= "../raw_data/protected_areas_export_WDPA_WDOECM_shp1_table.tsv")
-file.rename(from="../raw_data/protected_areas_export_WDPA_WDOECM_shp2_table",
-           to= "../raw_data/protected_areas_export_WDPA_WDOECM_shp2_table.tsv")
+# check if data have been downloaded before 
+if(!dir.exists("../data/raw_data"))
+{
+  # download archive
+  tmp_file <- tempfile()
+  tmp_dir <- tempdir()
+  dir.create("../data/raw_data",recursive = TRUE)
+  dir.create("../data/modified_data",recursive = TRUE)
+  
+  download_url <- "http://download.gbif.org/custom_download/jwaller/protected_areas_export.zip" # will change to zenodo link upon archival of data
+  download.file(download_url,destfile="../data/raw_data/protected_areas_export.zip")
+  
+  # unzip files 
+  unzip("../data/raw_data/protected_areas_export.zip",
+        files=c("protected_areas_export_WDPA_WDOECM_shp0_table",
+                         "protected_areas_export_WDPA_WDOECM_shp1_table",
+                         "protected_areas_export_WDPA_WDOECM_shp2_table",
+                "data.zip"),
+                         exdir = "..//raw_data",overwrite = TRUE) 
+  file.rename(from="../data/raw_data/protected_areas_export_WDPA_WDOECM_shp0_table",
+             to= "../data/raw_data/protected_areas_export_WDPA_WDOECM_shp0_table.tsv")
+  file.rename(from="../data/raw_data/protected_areas_export_WDPA_WDOECM_shp1_table",
+             to= "../data/raw_data/protected_areas_export_WDPA_WDOECM_shp1_table.tsv")
+  file.rename(from="../data/raw_data/protected_areas_export_WDPA_WDOECM_shp2_table",
+             to= "../data/raw_data/protected_areas_export_WDPA_WDOECM_shp2_table.tsv")
+  
+  
+  # Extract and combine occurrence data
+  occ1 <- import("../data/raw_data/protected_areas_export_WDPA_WDOECM_shp0_table.tsv")
+  occ2 <- import("../data/raw_data/protected_areas_export_WDPA_WDOECM_shp1_table.tsv")
+  occ3 <- import("../data/raw_data/protected_areas_export_WDPA_WDOECM_shp2_table.tsv")
+  occ <- bind_rows(occ1,occ2,occ3)
+  occ_sub <- occ[1:100,]
+   
+  # Extract and combine spatial data (WDPA polygons)
+  unzip("../raw_data/data.zip",exdir = "..//raw_data",overwrite = TRUE)
+  
+  WDPA_WDOECM_shp0 <- read_sf(dsn = "../data/raw_data/data/polygon_shapefiles/WDPA_WDOECM_shp0", layer = "WDPA_WDOECM_shp0")
+  WDPA_WDOECM_shp1 <- read_sf(dsn = "../data/raw_data/data/polygon_shapefiles/WDPA_WDOECM_shp1", layer = "WDPA_WDOECM_shp1")
+  WDPA_WDOECM_shp2 <- read_sf(dsn = "../data/raw_data/data/polygon_shapefiles/WDPA_WDOECM_shp2", layer = "WDPA_WDOECM_shp2")
+  
+  WDPA_WDOECM_sf <- bind_rows(WDPA_WDOECM_shp0,WDPA_WDOECM_shp1,WDPA_WDOECM_shp2)
+  
+  
+  # Save modified files and clean
+  save("WDPA_WDOECM_sf", "occ", file = "../data/modified_data/WDPA_GBIF.RData")
+  # To load the data again - load("WDPA_GBIF.RData")
+  
+  file.remove(list.files("../data/raw_data",full.names = TRUE))
+    
+}
 
-occ1 <- import("../raw_data/protected_areas_export_WDPA_WDOECM_shp0_table.tsv")
-occ2 <- import("../raw_data/protected_areas_export_WDPA_WDOECM_shp1_table.tsv")
-occ3 <- import("../raw_data/protected_areas_export_WDPA_WDOECM_shp2_table.tsv")
 
-file.remove(list.files("../raw_data",full.names = TRUE))
 
-occ <- bind_rows(occ1,occ2,occ3)
-occ_sub <- occ[1:100,]
- 
-```
 
+``` 
+
+In total the raw dataset contains `r dim(occ)[1] ` occurrence records. 
 
 ## Data wrangling and grouping
+
 Group data on location and taxa and year. 
 
 ```{r download, echo=FALSE}
+
+# load data if not in memory
+if(!exists("WDPA_WDOECM_sf") & !exists("occ")) {
+  load("../data/modified_data/WDPA_GBIF.RData")
+}
+
+# summarize occurrences (species, year, protected-area)
+
+
+
 
 ```
 
