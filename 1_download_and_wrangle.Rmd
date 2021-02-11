@@ -18,7 +18,7 @@ library(sf)
 ```{r download, echo=FALSE}
 
 # check if data have been downloaded before 
-if(!dir.exists("../data/raw_data"))
+if(!file.exists("../data/modified_data/WDPA_GBIF.RData"))
 {
   # download archive
   tmp_file <- tempfile()
@@ -89,8 +89,29 @@ if(!exists("WDPA_WDOECM_sf") & !exists("occ")) {
 
 # summarize occurrences (species, year, protected-area)
 
+locations <- occ %>%
+  group_by(WDPA_PID,year,decimallatitude,decimallongitude,datasetkey,
+           specieskey,scientificname,kingdom,phylum,class,order_,family,
+           genus,species,taxonrank) %>%
+  summarize(sum_occ = length(unique(occurrenceid)))
 
+occ_by_year_wdpa <- occ %>%
+  group_by(WDPA_PID,year,
+           specieskey,scientificname,kingdom,phylum,class,order_,family,
+           genus,species,taxonrank) %>%
+  summarize(sum_occ = length(unique(occurrenceid)))
 
+occ_by_wdpa <- occ %>%
+  group_by(WDPA_PID,
+           specieskey,scientificname,kingdom,phylum,class,order_,family,
+           genus,species,taxonrank) %>%
+  summarize(sum_occ = length(unique(occurrenceid)))
+
+n_taxa_by_wdpa <- occ %>%
+  group_by(WDPA_PID,
+           specieskey,scientificname,kingdom,phylum,class,order_,family,
+           genus,species,taxonrank) %>%
+  summarize(sum_occ = length(unique(occurrenceid)))
 
 ```
 
