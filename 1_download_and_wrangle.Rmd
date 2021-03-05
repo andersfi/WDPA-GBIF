@@ -70,6 +70,8 @@ if(!file.exists("../data/modified_data/WDPA_GBIF.RData"))
   file.remove(list.files("../data/raw_data",full.names = TRUE))
     
 } else {
+  print("Download not necessary, loading RData")
+  flush.console()
   load("../data/modified_data/WDPA_GBIF.RData")
 }
 
@@ -87,7 +89,7 @@ if(!file.exists("../data/modified_data/WDPA_GBIF.RData"))
 
 In total the raw dataset contains `r dim(occ)[1] ` occurrence records.
 
-There are `r sum(pa_sf[pa_sf$MARINE==0]) ` terrestrial protected areas.
+There are `r sum(pa_sf$MARINE==0) ` terrestrial protected areas.
 updated `r date() `
 
 ## Data wrangling and grouping
