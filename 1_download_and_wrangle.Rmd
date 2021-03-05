@@ -1,7 +1,7 @@
 ---
 title: "WDPA-GBIF"
-author: "Anders G. Finstad"
-date: "February 3, 2021"
+author: "Anders G. Finstad and Ivar Herfindal"
+date: 5. March
 output: html_document
 ---
 
@@ -10,6 +10,7 @@ output: html_document
 library(dplyr)
 library(rio)
 library(sf)
+library(mapsf)
 ```
 
 ## Data download and import
@@ -35,7 +36,7 @@ if(!file.exists("../data/modified_data/WDPA_GBIF.RData"))
                          "protected_areas_export_WDPA_WDOECM_shp1_table",
                          "protected_areas_export_WDPA_WDOECM_shp2_table",
                 "data.zip"),
-                         exdir = "..//raw_data",overwrite = TRUE) 
+                         exdir = "../data/raw_data",overwrite = TRUE) 
   file.rename(from="../data/raw_data/protected_areas_export_WDPA_WDOECM_shp0_table",
              to= "../data/raw_data/protected_areas_export_WDPA_WDOECM_shp0_table.tsv")
   file.rename(from="../data/raw_data/protected_areas_export_WDPA_WDOECM_shp1_table",
@@ -49,41 +50,54 @@ if(!file.exists("../data/modified_data/WDPA_GBIF.RData"))
   occ2 <- import("../data/raw_data/protected_areas_export_WDPA_WDOECM_shp1_table.tsv")
   occ3 <- import("../data/raw_data/protected_areas_export_WDPA_WDOECM_shp2_table.tsv")
   occ <- bind_rows(occ1,occ2,occ3)
+  rm(occ1, occ2, occ3)
   occ_sub <- occ[1:100,]
    
   # Extract and combine spatial data (WDPA polygons)
-  unzip("../raw_data/data.zip",exdir = "..//raw_data",overwrite = TRUE)
+  unzip("../raw_data/data.zip",exdir = "../data/raw_data",overwrite = TRUE)
   
   WDPA_WDOECM_shp0 <- read_sf(dsn = "../data/raw_data/data/polygon_shapefiles/WDPA_WDOECM_shp0", layer = "WDPA_WDOECM_shp0")
   WDPA_WDOECM_shp1 <- read_sf(dsn = "../data/raw_data/data/polygon_shapefiles/WDPA_WDOECM_shp1", layer = "WDPA_WDOECM_shp1")
   WDPA_WDOECM_shp2 <- read_sf(dsn = "../data/raw_data/data/polygon_shapefiles/WDPA_WDOECM_shp2", layer = "WDPA_WDOECM_shp2")
   
-  WDPA_WDOECM_sf <- bind_rows(WDPA_WDOECM_shp0,WDPA_WDOECM_shp1,WDPA_WDOECM_shp2)
+  pa_sf <- bind_rows(WDPA_WDOECM_shp0,WDPA_WDOECM_shp1,WDPA_WDOECM_shp2)
   
   
   # Save modified files and clean
-  save("WDPA_WDOECM_sf", "occ", file = "../data/modified_data/WDPA_GBIF.RData")
+  save("pa_sf", "occ", file = "../data/modified_data/WDPA_GBIF.RData")
   # To load the data again - load("WDPA_GBIF.RData")
   
   file.remove(list.files("../data/raw_data",full.names = TRUE))
     
+} else {
+  load("../data/modified_data/WDPA_GBIF.RData")
 }
 
-
-
+## important attributes in the pa-data:
+## PARENT_ISO = country 
+## MARINE = marine PA ("1") or not ("0") (and also "2", probably a combination such as 
+##  the area around Bjørnøya and Jan Mayen))
+##  e.g. 
+##  plot(pa_sf[pa_sf$PARENT_ISO=="NOR","MARINE"])
+## DESIGN_ENG = English name of protection types. A lot of different 
+##  types (170), and I suggest we skip many of them and focus on some key
+##  PA-types
 
 ``` 
 
-In total the raw dataset contains `r dim(occ)[1] ` occurrence records. 
+In total the raw dataset contains `r dim(occ)[1] ` occurrence records.
+
+There are `r sum(pa_sf[pa_sf$MARINE==0]) ` terrestrial protected areas.
+updated `r date() `
 
 ## Data wrangling and grouping
 
 Group data on location and taxa and year. 
 
-```{r download, echo=FALSE}
+```{r download2, echo=FALSE}
 
 # load data if not in memory
-if(!exists("WDPA_WDOECM_sf") & !exists("occ")) {
+if(!exists("pa_sf") & !exists("occ")) {
   load("../data/modified_data/WDPA_GBIF.RData")
 }
 
